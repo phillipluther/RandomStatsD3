@@ -54,7 +54,8 @@
 				}),
 
 
-				rightNow = new Date().getTime(),
+				rightNow 	= new Date().getTime(),
+				xScaleJump 	= 60000, // 60 seconds later
 
 				// init our Dynamic Graph with a fleshed-out set of options
 				dynamicTrend = new TimeGraph('#dynamicTrend', '../api/latest_value.html', {
@@ -68,7 +69,8 @@
 
 					// one minute displayed on the graph
 					xScaleMin		: rightNow,
-					xScaleMax		: rightNow + 59999, // 60 seconds later
+					xScaleMax		: rightNow + xScaleJump, 
+					xScaleJump		: xScaleJump,
 
 					yScaleMax		: 100,
 					refreshInterval	: 2000 // in ms

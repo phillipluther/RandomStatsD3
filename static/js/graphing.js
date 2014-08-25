@@ -372,6 +372,9 @@ var TimeGraph = function(Selector, DataSource, Options) {
             // re-render with the new scale
             SVG.remove();
             SVG = undefined;
+
+            Options.xScaleMin = d3.min(Data.Times);
+            Options.xScaleMax = d3.max(Data.Times) + Options.xScaleJump;
         }
 
         // update our data cache
