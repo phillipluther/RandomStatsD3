@@ -4,16 +4,16 @@
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<title>Random Stats!</title>
 
-	<link href="../static/css/main.less" rel="stylesheet/less" type="text/css">
+	<link href="static/css/main.less" rel="stylesheet/less" type="text/css">
 	
-	<script src="../static/js/lib/less-1.7.3-min.js"></script>
-	<script src="../static/js/lib/jquery-1.11.1-min.js"></script>
-	<script src="../static/js/lib/d3-3.4.11.js"></script>
+	<script src="static/js/lib/less-1.7.3-min.js"></script>
+	<script src="static/js/lib/jquery-1.11.1-min.js"></script>
+	<script src="static/js/lib/d3-3.4.11.js"></script>
 	
 	<!-- I added underscore for some of the array/object management utils -->
 	<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"></script>
 
-	<script src="../static/js/graphing.js"></script>	
+	<script src="static/js/graphing.js"></script>	
 	
 	<script type="text/javascript">
 
@@ -48,7 +48,7 @@
 				},
 
 
-				trend = new TimeGraph('#trend', '../api/all_values.html', {
+				trend = new TimeGraph('#trend', '/api/all_values', {
 					title 			: 'Snapshot of the Data',
 					keyTranslator 	: translateTime
 				}),
@@ -58,7 +58,7 @@
 				xScaleJump 	= 60000, // 60 seconds later
 
 				// init our Dynamic Graph with a fleshed-out set of options
-				dynamicTrend = new TimeGraph('#dynamicTrend', '../api/latest_value.html', {
+				dynamicTrend = new TimeGraph('#dynamicTrend', '/api/latest_value', {
 
 					title 			: 'Dynamically-updated Data',
 					keyTranslator	: translateTime,

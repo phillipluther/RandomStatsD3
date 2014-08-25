@@ -339,9 +339,9 @@ var TimeGraph = function(Selector, DataSource, Options) {
     //
     function processData(data) {
 
-        //console.log('res', parsedResponse);
         var
-            parsedResponse = JSON.parse(data),
+            //parsedResponse = JSON.parse(data),
+            parsedResponse = data,
 
             // are we working with a fully-fleshed out obj (Times/Vals) or just a single update?
             dataObj = (isUndefined(parsedResponse.Values))
