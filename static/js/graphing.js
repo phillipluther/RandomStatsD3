@@ -38,10 +38,6 @@ var TimeGraph = function(Selector, DataSource, Options) {
         // optional scaling subdivision option
         XScaleTicks = Options.xScaleTicks || 6,
 
-        // our cache of any "aliases" we'll put on our data keys; this could be extended to
-        // affect data points, as well.
-        TranslatedKeys,
-
         // when our graph is rendered the first time, we'll keep references to some of our D3
         // utility functions so we can refresh the line graph in the lightest, most efficient
         // way possible and avoid re-calculating everything
@@ -70,33 +66,6 @@ var TimeGraph = function(Selector, DataSource, Options) {
     //
     function buildTranslation(xVal, yVal) {
         return 'translate(' + xVal + ', ' + yVal + ')';
-    }
-
-    //
-    // This method applies an optional translation to our axis scale. For this use case, our times
-    // come in as Unix times and we'll translate them to human-friendly values.
-    //
-    function createTranslatedScale(arr) {
-
-        var
-            translatedKeys = [],
-            translator     = Options.keyTranslator,
-            i,
-            n;
-
-        if (isUndefined(translator)) {
-            return arr;
-        }
-
-        // if a translation method was provided, translate each item
-        for (i = 0, n = arr.length; i < n; i++) {
-
-            translatedKeys.push(
-                translator(arr[i])
-            );
-        }
-
-        return translatedKeys;
     }
 
     //
@@ -260,11 +229,6 @@ var TimeGraph = function(Selector, DataSource, Options) {
     //
     function refreshVisualization() {
 
-        // check if any translation methods were given for the keys (in this case, time comes
-        // as Unix times, and we can pass an optional translation method for formatting).
-        // if this were a larger project, we could do the same type of thing for values, too.
-        //TranslatedKeys = translateKeys(Data.Times);
-
         // if our graph shell hasn't been rendered (first time loading data), do so
         if (isUndefined(SVG)) {
             renderVisualization();
@@ -281,7 +245,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
     // This is our method for fetching data from a given source; it's incredibly simplistic for
     // the purposes of this exercise, but could be fleshed out in any direction to help scale.
     //
-    function fetchData(dataSource) {
+    function fetchData() {
 
         $.get(DataSource, function(response) {
             $this.update.call($this, response);
