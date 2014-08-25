@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	<title>Random Stats!</title>
+
+	<link href="../static/css/main.less" rel="stylesheet/less" type="text/css">
+	
+	<script src="../static/js/lib/less-1.7.3-min.js"></script>
+	<script src="../static/js/lib/jquery-1.11.1-min.js"></script>
+	<script src="../static/js/lib/d3-3.4.11.js"></script>
+	
+	<script src="../static/js/graphing.js"></script>	
+	
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+
+			// TODO: call whatever functions you need to from graphing.js in order to
+			// populate the #trend and #dynamicTrend divs (below) with the D3 line
+			// graph data.
+
+			// Done.
+			var
+				// this is a translation method which gets passed as an option to our Graph, which
+				// takes Unix timestamps'ish and turns 'em into human-readable items; it's 
+				// currently hacked just to group things by the item 10s.
+				timeTranslator = function(inMs) {
+
+					/*
+					 * I initially thought those were timestamps ... which they might be! but with
+					 * only 30 datapoints everything was super-clumped together. I just followed the
+					 * lead of the example and grouped by ending.
+					 * 
+					var
+						date = new Date(inMs);
+
+					return date.getMinutes();
+					*/
+
+					var
+						stringified = inMs.toString(),
+						strLen 		= stringified.length;
+
+					return stringified.charAt(strLen - 2) + stringified.charAt(strLen - 1);
+				},
+
+
+				trend = new TimeGraph('#trend', '../api/all_values.html', {
+					title 			: 'Snapshot of the Data',
+					keyTranslator 	: timeTranslator
+				}),
+
+
+				// init our Dynamic Graph with a fleshed-out set of options
+				dynamicTrend = new TimeGraph('#dynamicTrend', '../api/latest_value.html', {
+
+					title 			: 'Dynamically-updated Data',
+					keyTranslator	: timeTranslator,
+					key				: 'Times',
+
+					isDynamic 		: true,
+					xScaleMin		: 0,
+					xScaleMax		: 60,
+					yScaleMax		: 100,
+					refreshInterval	: 2000 // in ms
+				});
+ 
+ 			window.t = trend;
+ 			window.dt = dynamicTrend;
+		});
+	</script>
+</head>
+
+<body>
+	<div id="header">
+		<span>Random Stats!</span>
+	</div>
+
+	<div id="content">
+		
+		<div id="graphs">
+
+			<!--
+				TODO: This is a static graph that displays a set of datapoints fetched 
+				from the webservice (via localhost:8080/api/all_values).  
+				See the top trend graph in random_stats_screenshot.jpg for reference.
+			-->
+			<div id="trend" class="graph"></div>
+
+			<!--
+				This is a dynamically-updated graph should fetch a new datapoint from
+				the server every 2 seconds.  It should be initially loaded from the
+				data returned by the 'GET /api/all_values' web service endpoint.  After that,
+				the graph should get the latest value from the web service 
+				(via 'GET /api/latest_value') and append it to the graph.
+				See the top trend graph in random_stats_screenshot.jpg for reference.
+			-->
+			<div id="dynamicTrend" class="graph"></div>
+
+		</div>
+		
+		<!--
+			Make this footer "sticky".  Height should be 50px or so.
+		-->
+		<div id="footer">
+			<div id="info">
+				Sticky Footer!
+			</div>
+		</div>
+	</div>
+</body>

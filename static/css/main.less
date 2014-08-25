@@ -1,0 +1,173 @@
+@header_color: rgb(80, 80, 80);       // background color of header and footer
+@bk_color: rgb(240, 240, 240);        // main page background color
+@graph_bk_color: black;               // background color of the trend graphs
+@graph_txt_color: orange;             // color of the title text at top of each graph
+@graph_axis_color: fade(green, 90%);  // color of graph axes and labels
+
+body {
+	font-family:		Tahoma,Arial,Helvetica,sans-serif;    
+	margin-left:		0em;
+	margin-right:		0em;
+	margin-top:			0em;
+	margin-bottom:		0em;
+}
+
+
+
+// <<< Existing stuff
+//
+// ===============================================================================================
+//
+// My stuff >>>
+
+@baseUnit: 50px;
+
+@headerHeight: @baseUnit;
+@footerHeight: @baseUnit;
+
+@textOnDarkColor: #fff;
+@chromeColor: @header_color;
+@graphLineColor: #9ac;
+
+// force 100% height on the page (assumed single-page app);
+html,
+body {
+    height: 100%;
+    background-color: @bk_color;
+}
+
+#header {
+    height: @headerHeight;
+    line-height: @headerHeight;
+    padding: 0 @baseUnit / 2;
+    .heading-1;
+    .above;
+}
+
+#footer {
+    height: @footerHeight;
+    line-height: @footerHeight;
+    .full-width;
+    .text-centered;
+    .heading-3;
+    .above;
+
+    // overwrites positioning from .above
+    position: fixed;
+    left: 0;
+    bottom: 0;
+}
+
+#header,
+#footer {
+    background-color: @chromeColor;
+    color: @textOnDarkColor;
+    .shadowed;
+}
+
+#content {
+    padding: @baseUnit;
+}
+
+//
+// ==============================================
+// Graph stylings
+//
+.graph {
+
+    @graphHeaderHeight: @baseUnit / 2;
+
+    width: 800px;
+    height: 280px;
+    margin-bottom: @baseUnit;
+    border: 1px solid @chromeColor;
+    background: @graph_bk_color;
+
+    .graph-header {
+        padding: 0 @baseUnit / 5;
+        height: @graphHeaderHeight;
+        line-height: @graphHeaderHeight;
+        background: @chromeColor;
+        color: @textOnDarkColor;
+        .small-text;
+    }
+
+    /* tell the SVG path to be a thin blue line without any area fill */
+    path {
+        stroke: @graphLineColor;
+        stroke-width: 3;
+        fill: none;
+    }
+    
+    text {
+        color: @graph_axis_color;
+        fill: @graph_axis_color;
+        font-size: 0.8em;
+    }
+
+    .graph-y-axis,
+    .graph-x-axis {
+
+        line {
+            stroke: @graph_axis_color;
+            stroke-width: 1;
+        }
+
+        path {
+            fill: none;
+            stroke: @graph_axis_color;
+            stroke-width: 2;
+        }
+    }
+}
+
+//
+// ==============================================
+// Helper mix-ins
+//
+.heading-1 {
+    font-size: 1.6em;
+}
+
+.heading-2 {
+    font-size: 1.4em;
+}
+
+.heading-3 {
+    font-size: 1.2em;
+}
+
+.small-text {
+    font-size: .8em;
+    .bold;
+}
+
+.above {
+    position: relative;
+    z-index: 10;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.border-box {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+        -ms-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+// totally frivolous decoration
+.shadowed {
+    -webkit-box-shadow: 0 0 6px rgba(0, 0, 0, .5);
+}
+
+.full-width {
+    .border-box;
+    width: 100%;
+}
+
+.text-centered {
+    text-align: center;
+}
