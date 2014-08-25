@@ -35,6 +35,9 @@ var TimeGraph = function(Selector, DataSource, Options) {
         // our maximum number of data points to plot
         MaxDataPoints = Options.maxDataPoints || 100,
 
+        // optional scaling subdivision option
+        XScaleTicks = Options.xScaleTicks || 6,
+
         // our cache of any "aliases" we'll put on our data keys; this could be extended to
         // affect data points, as well.
         TranslatedKeys,
@@ -70,10 +73,10 @@ var TimeGraph = function(Selector, DataSource, Options) {
     }
 
     //
-    // This method applies an optional translation to our data keys. For this use case, our times
+    // This method applies an optional translation to our axis scale. For this use case, our times
     // come in as Unix times and we'll translate them to human-friendly values.
     //
-    function translateKeys(arr) {
+    function createTranslatedScale(arr) {
 
         var
             translatedKeys = [],
@@ -148,11 +151,11 @@ var TimeGraph = function(Selector, DataSource, Options) {
     function createScaling(domainMin, domainMax, rangeMin, rangeMax) {
                 
         var
-            axis = d3.scale.linear()
+            scale = d3.scale.linear()
                 .domain([domainMin, domainMax])
                 .range([rangeMin, rangeMax]);
 
-        return axis;
+        return scale;
     }
 
     //
@@ -176,11 +179,11 @@ var TimeGraph = function(Selector, DataSource, Options) {
 
             // initial setup
             xMin = (isUndefined(Options.xScaleMin))
-                ? d3.min(TranslatedKeys)
+                ? d3.min(Data.Times)
                 : Options.xScaleMin,
 
             xMax = (isUndefined(Options.xScaleMax))
-                ? d3.max(TranslatedKeys)
+                ? d3.max(Data.Times)
                 : Options.xScaleMax,
 
             yMax = (isUndefined(Options.yScaleMax))
@@ -199,7 +202,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
 
         Plotter = d3.svg.line()
             .x(function(d, i) {
-                return XScaling(TranslatedKeys[i]);
+                return XScaling(Data.Times[i]);
             })
             .y(function(d, i) {
                 return YScaling(d);
@@ -207,6 +210,17 @@ var TimeGraph = function(Selector, DataSource, Options) {
 
         // create our x/y axis create methods
         xAxis = d3.svg.axis()
+            .tickFormat(function(d, i) {
+
+                // apply custom formatting to our scale to make it user-friendly
+                if (isUndefined(Options.keyTranslator)) {
+                    return d;
+
+                } else {
+                    return Options.keyTranslator(d + (i * 10));
+                }
+            })
+            .ticks(XScaleTicks)
             .scale(XScaling);
 
         yAxis = d3.svg.axis()
@@ -235,7 +249,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
             .append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', buildTranslation(0, yAxisTopOffset + (Padding.bottom / 2)))
-                .text('Time (by minute):');
+                .text('Time:');
 
         // stash a reference to our SVG element
         SVG = svg;
@@ -249,7 +263,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
         // check if any translation methods were given for the keys (in this case, time comes
         // as Unix times, and we can pass an optional translation method for formatting).
         // if this were a larger project, we could do the same type of thing for values, too.
-        TranslatedKeys = translateKeys(Data.Times);
+        //TranslatedKeys = translateKeys(Data.Times);
 
         // if our graph shell hasn't been rendered (first time loading data), do so
         if (isUndefined(SVG)) {
@@ -270,7 +284,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
     function fetchData(dataSource) {
 
         $.get(DataSource, function(response) {
-            processData.call($this, response);
+            $this.update.call($this, response);
         });
     }
 
@@ -313,7 +327,7 @@ var TimeGraph = function(Selector, DataSource, Options) {
             timestamp = new Date(),
 
             dataObj = {
-                Times   : [timestamp.getSeconds()],
+                Times   : [timestamp.getTime()],
                 Values  : [data.value]
             };
 
@@ -323,17 +337,49 @@ var TimeGraph = function(Selector, DataSource, Options) {
     //
     // 
     //
-    function processData(dataObj) {
+    function processData(data) {
 
+        //console.log('res', parsedResponse);
         var
-            parsedResponse = JSON.parse(dataObj),
+            parsedResponse = JSON.parse(data),
 
             // are we working with a fully-fleshed out obj (Times/Vals) or just a single update?
-            processedData = (isUndefined(parsedResponse.Values))
+            dataObj = (isUndefined(parsedResponse.Values))
                 ? timestampValue(parsedResponse)
-                : parsedResponse;
+                : parsedResponse,
 
-        $this.update(processedData);
+            processedData = {},
+            spliceFrom;
+
+        if (isUndefined(dataObj.Times) || isUndefined(dataObj.Values)) {
+            console.warn('Can not update graph with the given data object:', dataObj);
+            return false;
+        }
+
+        processedData.Times  = Data.Times.concat(dataObj.Times);
+        processedData.Values = Data.Values.concat(dataObj.Values);
+
+        // truncate any items in our Times/Values arrays that are overflowing; we're assuming our
+        // two datapoints are always in sync
+        if (processedData.Times.length > MaxDataPoints) {
+
+            //console.log('Reset');
+            spliceFrom = processedData.Times.length - MaxDataPoints;
+
+            processedData.Times  = processedData.Times.splice(spliceFrom, MaxDataPoints);
+            processedData.Values = processedData.Values.splice(spliceFrom, MaxDataPoints);
+
+            // re-render with the new scale
+            SVG.remove();
+            SVG = undefined;
+        }
+
+        // update our data cache
+        Data.Times  = processedData.Times;
+        Data.Values = processedData.Values;
+
+        return true;
+        //$this.update(processedData);
     }
 
 //
@@ -355,27 +401,10 @@ var TimeGraph = function(Selector, DataSource, Options) {
     //
     this.update = function(data) {
 
-        var
-            spliceFrom;
-
-        if (isUndefined(data.Times) || isUndefined(data.Values)) {
-            console.warn('Can not update graph with the given data object:', data);
-            return;
+        // pass our data along for processing
+        if (processData(data)) {
+            refreshVisualization();
         }
-
-        Data.Times  = Data.Times.concat(data.Times);
-        Data.Values = Data.Values.concat(data.Values);
-
-        // truncate any items in our Times/Values arrays that are overflowing; we're assuming our
-        // two datapoints are always in sync
-        if (Data.Times.length > MaxDataPoints) {
-            spliceFrom = Data.Times.length - MaxDataPoints;
-
-            Data.Times  = Data.Times.splice(spliceFrom, MaxDataPoints);
-            Data.Values = Data.Values.splice(spliceFrom, MaxDataPoints);
-        }
-
-        refreshVisualization();
     };
 
 
@@ -402,6 +431,9 @@ var TimeGraph = function(Selector, DataSource, Options) {
 
         // check for special handling via our options obj
         if (Options.isDynamic) {
+
+            // dynamic charts require special scaling, as the entire list of values is built
+            // over time
 
             // custom interval for refreshing?
             RefreshInterval = (isUndefined(Options.refreshInterval))

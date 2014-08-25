@@ -10,6 +10,9 @@
 	<script src="../static/js/lib/jquery-1.11.1-min.js"></script>
 	<script src="../static/js/lib/d3-3.4.11.js"></script>
 	
+	<!-- I added underscore for some of the array/object management utils -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"></script>
+
 	<script src="../static/js/graphing.js"></script>	
 	
 	<script type="text/javascript">
@@ -25,7 +28,7 @@
 				// this is a translation method which gets passed as an option to our Graph, which
 				// takes Unix timestamps'ish and turns 'em into human-readable items; it's 
 				// currently hacked just to group things by the item 10s.
-				timeTranslator = function(inMs) {
+				translateTime = function(inMs) {
 
 					/*
 					 * I initially thought those were timestamps ... which they might be! but with
@@ -37,35 +40,40 @@
 
 					return date.getMinutes();
 					*/
-
 					var
-						stringified = inMs.toString(),
-						strLen 		= stringified.length;
+						shavedEnding = inMs % 100,
+						fauxSeconds  = (shavedEnding > 60) ? shavedEnding - 60 : shavedEnding;
 
-					return stringified.charAt(strLen - 2) + stringified.charAt(strLen - 1);
+					return ':' + fauxSeconds.toString();
 				},
 
 
 				trend = new TimeGraph('#trend', '../api/all_values.html', {
 					title 			: 'Snapshot of the Data',
-					keyTranslator 	: timeTranslator
+					keyTranslator 	: translateTime
 				}),
 
+
+				rightNow = new Date().getTime(),
 
 				// init our Dynamic Graph with a fleshed-out set of options
 				dynamicTrend = new TimeGraph('#dynamicTrend', '../api/latest_value.html', {
 
 					title 			: 'Dynamically-updated Data',
-					keyTranslator	: timeTranslator,
+					keyTranslator	: translateTime,
 					key				: 'Times',
 
 					isDynamic 		: true,
-					xScaleMin		: 0,
-					xScaleMax		: 60,
+					maxDataPoints	: 30,
+
+					// one minute displayed on the graph
+					xScaleMin		: rightNow,
+					xScaleMax		: rightNow + 59999, // 60 seconds later
+
 					yScaleMax		: 100,
 					refreshInterval	: 2000 // in ms
 				});
- 
+
  			window.t = trend;
  			window.dt = dynamicTrend;
 		});
